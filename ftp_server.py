@@ -1,46 +1,75 @@
-#server side
-#CIS 457 Project 1
-#Jessica Ricksgers Elijah Smith Sylas Agnew
+# server side
+# CIS 457 Project 1
+# Jessica Ricksgers Elijah Smith Sylas Agnew
 
 
 #!/usr/bin/env python3
 
 import socket
+import select
+import os
 
 HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
-PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
+PORT = 4321        # Port to listen on (non-privileged ports are > 1023)
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
     s.listen()
-    conn, addr = s.accept()
-    with conn:
-        print('Connected by', addr)
+    print("Starting server on localhost port 4321")
+
+    while True:
+
+        print("Waiting for someone to connect...")
+        connection, client = sock.accept()
+        
+        try:
+
+            print("connected to: ", client)
+
+
         while True:
+
             data = conn.recv(1024)
-            if not data:
-                break
-            conn.sendall(data)
 
-# allows a client to connect to a server
-def CONNECT(address, port):
+            if (data.decode() == 'quit'):
 
-# When this command is sent to the server, the server returns a list of 
-# the files in the current directory on which it is executing.
-# The client should get the list and display it on the screen.
-def LIST():
+                    print("Quitting!")
 
-# This command allows a client to get a file specified by
-# its filename from the server.
-def RETRIEVE(filename):
+                    break
 
-# This command allows a client to send a file specified
-# by its filename to the server.
-def STORE(filename):
+                else:
+                    commands = data.decode().split(' ', 1)
+                    file = commands[1]
 
-# This command allows a client to terminate the control connection.
-# On receiving this command, the client should send it to the server
-# and terminate the connection. When the ftp_server receives the quit
-# command it should close its end of the connection.
-def QUIT():
+                    if (commands[0] == 'upload'):
 
+                        with open(file, 'w') as writefile:
+
+                            while True:
+                                data = connection.recv(1024)
+
+                                if not data:
+                                    break
+
+                                writefile.write(data.decode('utf-8'))
+                                writefile.close()
+                                break
+
+                    elif (commands[0] == 'message'):
+
+                        print(file)
+                        conn.send(("recieved").encode())
+
+                    elif (commands[0] == 'download'):
+
+                        with open(file, 'r') as getfile:
+                            for data in getfile:
+                                conn.sendall(data.encode('utf-8'))
+
+                    else:
+
+                        conn.send(("Unknown command").encode())
+
+    connection.close()
+    
+socket.close()
