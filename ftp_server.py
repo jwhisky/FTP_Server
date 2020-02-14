@@ -10,79 +10,95 @@ import select
 import os
 import signal
 import sys
+import socket 
+from _thread import *
+import threading 
+  
+print_lock = threading.Lock() 
 
 HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 4321        # Port to listen on (non-privileged ports are > 1023)
+
+def threaded(conn): 
+
+    while True: 
+  
+         while True:
+
+            data = conn.recv(1024)
+
+            if (data.decode() == 'quit'):
+
+                conn.close()
+                socket.close()
+                print("Quitting!")
+                break
+
+            else:
+
+                commands = data.decode().split(' ', 1)
+
+                if( len(commands) > 0):
+                    
+                    file = commands[1]
+
+                if (commands[0] == 'upload'):
+
+                    with open(file, 'w') as writefile:
+
+                        while True:
+                            data = conn.recv(1024)
+
+                            if not data:
+                                break
+
+                            writefile.write(data.decode('utf-8'))
+                            writefile.close()
+                            break
+
+                elif (commands[0] == 'message'):
+
+                    print(file)
+                    conn.send(("recieved").encode())
+
+                elif (commands[0] == 'download'):
+
+                    with open(file, 'r') as getfile:
+                        for data in getfile:
+                            conn.sendall(data.encode('utf-8'))
+
+                else:
+
+                    conn.send(("Unknown command").encode())
+
+    c.close() 
+  
 
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
     sys.exit(0)
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+def Main():
     
-    s.bind((HOST, PORT))
-    s.listen(1)
-    print("Starting server on localhost port 4321")
-    signal.signal(signal.SIGINT, signal_handler)
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
-    while True:
+        s.bind((HOST, PORT))
+        s.listen(5)
+        print("Starting server on localhost port 4321")
+        signal.signal(signal.SIGINT, signal_handler)
 
-        print("Waiting for someone to connect...")
-        conn, client = s.accept()
+        while True:
 
-        try:
+            print("Waiting for someone to connect...")
+            conn, client = s.accept()
 
+            print_lock.acquire()
             print("connected to: ", client)
 
-            while True:
+            start_new_thread(threaded,(conn,))
 
-                data = conn.recv(1024)
+        print("Closing connection")
+        conn.close()
 
-                if (data.decode() == 'quit'):
-
-                    conn.close()
-                    socket.close()
-                    print("Quitting!")
-                    break
-
-                else:
-
-                    commands = data.decode().split(' ', 1)
-
-                    if( len(commands) > 0):
-                        
-                        file = commands[1]
-
-                    if (commands[0] == 'upload'):
-
-                        with open(file, 'w') as writefile:
-
-                            while True:
-                                data = conn.recv(1024)
-
-                                if not data:
-                                    break
-
-                                writefile.write(data.decode('utf-8'))
-                                writefile.close()
-                                break
-
-                    elif (commands[0] == 'message'):
-
-                        print(file)
-                        conn.send(("recieved").encode())
-
-                    elif (commands[0] == 'download'):
-
-                        with open(file, 'r') as getfile:
-                            for data in getfile:
-                                conn.sendall(data.encode('utf-8'))
-
-                    else:
-
-                        conn.send(("Unknown command").encode())
-
-        finally:
-
-            print("Closing connection")
-            conn.close()
+if __name__ == '__main__': 
+    Main() 
