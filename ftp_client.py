@@ -10,22 +10,40 @@ import selectors
 HOST = '127.0.0.1'  # The server's hostname or IP address
 PORT = 4321        # The port used by the server
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.connect((HOST, PORT))
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    while True:
+def connect(serverPort):
+    try:
+        print(' Connecting...')
 
-        mes = input("Enter your command: ")
+        serverAddress = (HOST, int(serverPort))
+        s.connect(serverAddress)
 
-        if (mes == 'quit'):
+        print(' Connected!')
 
-            print('Quitting!')
-            break
-        
+    except:
+        print(' ERROR - Could NOT connect to server!')
 
-        s.send(mes.encode())
-        data = s.recv(1024)
-        print('Received', repr(data))
+while True:
 
-    s.close()
+    mes = input("Enter your command: ")
+
+    if (mes == 'connect'):
+
+        address = input('please enter port number: ')
+        connect(address)
+
+
+    if (mes == 'quit'):
+
+        print('Quitting!')
+        break
+    
+    if (mes == 'message'):
+
+        x = input('enter message to send to server:')
+        s.send(x.encode())
+        #data = s.recv(1024)
+        #print('Received', repr(data))
+
 

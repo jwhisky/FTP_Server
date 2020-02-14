@@ -8,45 +8,57 @@
 import socket
 import select
 import os
+import signal
+import sys
 
 HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 4321        # Port to listen on (non-privileged ports are > 1023)
 
+def signal_handler(sig, frame):
+    print('You pressed Ctrl+C!')
+    sys.exit(0)
+
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    
     s.bind((HOST, PORT))
-    s.listen()
+    s.listen(1)
     print("Starting server on localhost port 4321")
+    signal.signal(signal.SIGINT, signal_handler)
 
     while True:
 
         print("Waiting for someone to connect...")
-        connection, client = sock.accept()
-        
+        conn, client = s.accept()
+
         try:
 
             print("connected to: ", client)
 
+            while True:
 
-        while True:
+                data = conn.recv(1024)
 
-            data = conn.recv(1024)
+                if (data.decode() == 'quit'):
 
-            if (data.decode() == 'quit'):
-
+                    conn.close()
+                    socket.close()
                     print("Quitting!")
-
                     break
 
                 else:
+
                     commands = data.decode().split(' ', 1)
-                    file = commands[1]
+
+                    if( len(commands) > 0):
+                        
+                        file = commands[1]
 
                     if (commands[0] == 'upload'):
 
                         with open(file, 'w') as writefile:
 
                             while True:
-                                data = connection.recv(1024)
+                                data = conn.recv(1024)
 
                                 if not data:
                                     break
@@ -70,6 +82,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                         conn.send(("Unknown command").encode())
 
-    connection.close()
-    
-socket.close()
+        finally:
+
+            print("Closing connection")
+            conn.close()
