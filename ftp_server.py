@@ -26,6 +26,7 @@ def threaded(conn):
          while True:
 
             data = conn.recv(1024)
+            print(str(data.decode()))
 
             if (data.decode() == 'quit'):
 
@@ -33,6 +34,12 @@ def threaded(conn):
                 socket.close()
                 print("Quitting!")
                 break
+
+            elif (data.decode() == 'list'):
+
+                dirList = os.listdir(os.getcwd())
+                conn.send('\n'.join(os.listdir(os.getcwd())).encode())
+                print(dirList)
 
             else:
 
