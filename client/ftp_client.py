@@ -68,7 +68,7 @@ while True:
         print("Downloading " + tokens[1] + "...");
 
         kilo = s.recv(1024)
-        while kilo:
+        while (kilo):
             out.write(kilo)
             kilo = s.recv(1024)
         out.close()
@@ -78,6 +78,8 @@ while True:
     if (mes == 'quit'):
 
         print('Quitting!')
+        s.send('quit'.encode())
+        #s.close()
         break
     
     if (mes == 'message'):

@@ -1,6 +1,6 @@
 # server side
 # CIS 457 Project 1
-# Jessica Ricksgers Elijah Smith Sylas Agnew
+# Jessica Ricksgers Elijah Smith Silas Agnew
 
 
 #!/usr/bin/env python3
@@ -17,21 +17,21 @@ import threading
 print_lock = threading.Lock() 
 
 HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
-PORT = 4321        # Port to listen on (non-privileged ports are > 1023)
+PORT = 4321         # Port to listen on (non-privileged ports are > 1023)
 
 def threaded(conn): 
-
+    
     while True: 
   
          while True:
 
             data = conn.recv(1024)
-            print(conn.getsockname() + ": " + str(data.decode()))
+            print(str(conn.getsockname()) + ": " + str(data.decode()))
 
             if (data.decode() == 'quit'):
 
                 conn.close()
-                socket.close()
+                #socket.close()
                 print("Quitting!")
                 break
 
@@ -72,6 +72,7 @@ def threaded(conn):
                     with open(file, 'r') as getfile:
                         for data in getfile:
                             conn.sendall(data.encode('utf-8'))
+                    conn.shutdown(socket.SHUT_WR)
 
                 else:
 
