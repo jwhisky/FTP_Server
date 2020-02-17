@@ -75,6 +75,15 @@ while True:
 
         print("Finished")
 
+    if (mes.startswith('send')):
+
+        tokens = mes.split(' ')
+        s.send(mes.encode())
+        with open(tokens[1], 'r') as getfile:
+            #for data in getfile:
+            s.sendall(getfile.read().rstrip('\0').encode())
+        s.shutdown(socket.SHUT_WR) 
+
     if (mes == 'quit'):
 
         print('Quitting!')

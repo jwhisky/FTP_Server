@@ -44,32 +44,27 @@ def threaded(conn):
 
                 commands = data.decode().split(' ', 1)
 
-                if( len(commands) > 0):
+                if( len(commands) > 1):
                     
-                    file = commands[1]
+                    filename = commands[1]
 
-                if (commands[0] == 'upload'):
+                if (commands[0] == 'send'):
 
-                    with open(file, 'w') as writefile:
+                    with open(filename, 'wb') as writefile:
 
-                        while True:
-                            data = conn.recv(1024)
-
-                            if not data:
-                                break
-
-                            writefile.write(data.decode('utf-8'))
-                            writefile.close()
-                            break
-
+                        k = conn.recv(1024)
+                        while (k):
+                            writefile.write(k)
+                            k = conn.recv(1024)
+                        
                 elif (commands[0] == 'message'):
 
-                    print(file)
+                    print(filename)
                     conn.send(("recieved").encode())
 
                 elif (commands[0] == 'download'):
 
-                    with open(file, 'r') as getfile:
+                    with open(filename, 'r') as getfile:
                         for data in getfile:
                             conn.sendall(data.encode('utf-8'))
                     conn.shutdown(socket.SHUT_WR)
