@@ -10,6 +10,10 @@ import selectors
 HOST = '127.0.0.1'  # The server's hostname or IP address
 PORT = 4321        # The port used by the server
 
+START_SIGNAL = 2
+END_SIGNAL = 4
+ERROR_SIGNAL = 24
+
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 connected = False
 
@@ -65,15 +69,24 @@ while True:
         out = open(tokens[1], 'wb')
         s.send(('download ' + tokens[1]).encode())
 
-        print("Downloading " + tokens[1] + "...");
+        size = s.recv(5)
+        size = int(size.decode())
 
-        kilo = s.recv(1024)
-        while (kilo):
-            out.write(kilo)
+        if (size > 0):
+
+            s.send("download".encode())
+            written = 0
             kilo = s.recv(1024)
-        out.close()
+            print("Downloading " + tokens[1] + "...");
+            while True:
+                written += out.write(kilo)
+                if (written >= size):
+                    break
+                kilo = s.recv(1024)
+            print("Finished.")
 
-        print("Finished")
+        else:
+            print("File does not exist.")
 
     if (mes.startswith('send')):
 
@@ -82,7 +95,7 @@ while True:
         with open(tokens[1], 'r') as getfile:
             #for data in getfile:
             s.sendall(getfile.read().rstrip('\0').encode())
-        s.shutdown(socket.SHUT_WR) 
+        #s.shutdown(socket.SHUT_WR) 
 
     if (mes == 'quit'):
 

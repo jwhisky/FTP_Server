@@ -19,59 +19,73 @@ print_lock = threading.Lock()
 HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 4321         # Port to listen on (non-privileged ports are > 1023)
 
+START_SIGNAL = bytes([2])
+END_SIGNAL = bytes([4])
+ERROR_SIGNAL = bytes([24])
+
 def threaded(conn): 
 
     while True:
 
-        while True:
+        data = conn.recv(1024)
+        print(str(conn.getsockname()) + ": " + str(data.decode()))
 
-            data = conn.recv(1024)
-            print(str(conn.getsockname()) + ": " + str(data.decode()))
+        if (data.decode() == 'quit'):
 
-            if (data.decode() == 'quit'):
+            #conn.close()
+            #socket.close()
+            print("Quitting!")
+            break
 
-                conn.close()
-                #socket.close()
-                print("Quitting!")
-                break
+        elif (data.decode() == 'list'):
 
-            elif (data.decode() == 'list'):
+            print("Sending Available Files to " + str(conn.getsockname()))
+            conn.send('\n'.join(os.listdir(os.getcwd())).encode())
 
-                print("Sending Available Files to " + str(conn.getsockname()))
-                conn.send('\n'.join(os.listdir(os.getcwd())).encode())
+        else:
+
+            commands = data.decode().split(' ', 1)
+
+            if( len(commands) > 1):
+                    
+                filename = commands[1]
+
+            if (commands[0] == 'send'):
+
+                with open(filename, 'wb') as writefile:
+
+                    k = conn.recv(1024)
+                    while (k):
+                        writefile.write(k)
+                        k = conn.recv(1024)
+                        
+            elif (commands[0] == 'message'):
+
+                print(filename)
+                conn.send(("recieved").encode())
+
+            elif (commands[0] == 'download'):
+
+                try:
+
+                    size = os.path.getsize('./' + filename)
+                    print("Size: " + str(size))
+                    conn.send(str(size).encode())
+                
+                except:
+                    conn.send('0'.encode())
+                    continue
+
+                confirm = conn.recv(1024)
+                if (confirm.decode() == "download"):
+
+                    with open(filename, 'rb') as getfile:
+                        for data in getfile:
+                            conn.sendall(data)
 
             else:
 
-                commands = data.decode().split(' ', 1)
-
-                if( len(commands) > 1):
-                    
-                    filename = commands[1]
-
-                if (commands[0] == 'send'):
-
-                    with open(filename, 'wb') as writefile:
-
-                        k = conn.recv(1024)
-                        while (k):
-                            writefile.write(k)
-                            k = conn.recv(1024)
-                        
-                elif (commands[0] == 'message'):
-
-                    print(filename)
-                    conn.send(("recieved").encode())
-
-                elif (commands[0] == 'download'):
-
-                    with open(filename, 'r') as getfile:
-                        for data in getfile:
-                            conn.sendall(data.encode('utf-8'))
-                    conn.shutdown(socket.SHUT_WR)
-
-                else:
-
-                    conn.send(("Unknown command").encode())
+                conn.send(("Unknown command").encode())
 
     conn.close() 
     
