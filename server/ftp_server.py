@@ -49,6 +49,7 @@ def threaded(conn):
             if (commands[0] == 'send'):
 
                 out = open(filename, 'wb')
+                conn.send("size".encode())
                 size = conn.recv(5)
                 print(size.decode())
                 size = int(size.decode())

@@ -92,7 +92,9 @@ while True:
         try:
             size = os.path.getsize('./' + tokens[1])
             s.send(mes.encode())
-            s.send(str(size).encode())
+            sizeConfirm = s.recv(5)
+            if (sizeConfirm.decode() == "size"):
+                s.send(str(size).encode())
 
         except:
             print("File does not exist to send.")
