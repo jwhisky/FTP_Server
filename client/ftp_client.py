@@ -5,14 +5,11 @@
 #!/usr/bin/env python3
 
 import socket
+import os
 import selectors
 
 HOST = '127.0.0.1'  # The server's hostname or IP address
 PORT = 4321        # The port used by the server
-
-START_SIGNAL = 2
-END_SIGNAL = 4
-ERROR_SIGNAL = 24
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 connected = False
@@ -91,11 +88,22 @@ while True:
     if (mes.startswith('send')):
 
         tokens = mes.split(' ')
-        s.send(mes.encode())
-        with open(tokens[1], 'r') as getfile:
-            #for data in getfile:
-            s.sendall(getfile.read().rstrip('\0').encode())
-        #s.shutdown(socket.SHUT_WR) 
+        
+        try:
+            size = os.path.getsize('./' + tokens[1])
+            s.send(mes.encode())
+            s.send(str(size).encode())
+
+        except:
+            print("File does not exist to send.")
+            continue
+        
+        confirm = s.recv(1024)
+        if (confirm.decode() == "send"):
+
+            with open(tokens[1], 'rb') as getfile:
+                for data in getfile:
+                    s.sendall(data)
 
     if (mes == 'quit'):
 

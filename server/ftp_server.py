@@ -19,10 +19,6 @@ print_lock = threading.Lock()
 HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 4321         # Port to listen on (non-privileged ports are > 1023)
 
-START_SIGNAL = bytes([2])
-END_SIGNAL = bytes([4])
-ERROR_SIGNAL = bytes([24])
-
 def threaded(conn): 
 
     while True:
@@ -52,25 +48,38 @@ def threaded(conn):
 
             if (commands[0] == 'send'):
 
-                with open(filename, 'wb') as writefile:
+                out = open(filename, 'wb')
+                size = conn.recv(5)
+                print(size.decode())
+                size = int(size.decode())
 
-                    k = conn.recv(1024)
-                    while (k):
-                        writefile.write(k)
-                        k = conn.recv(1024)
-                        
+                if (size > 0):
+
+                    conn.send("send".encode())
+                    written = 0
+                    data = conn.recv(1024)
+                    print("Receiving file...")
+                    while True:
+                        written += out.write(data)
+                        if (written >= size):
+                            break
+                        data = conn.recv(1024)
+                    print("Finished")
+
             elif (commands[0] == 'message'):
 
                 print(filename)
                 conn.send(("recieved").encode())
 
             elif (commands[0] == 'download'):
+                # Protocol for sending is to send the size of the file upon
+                # request then proceed to send file after client confirms size
 
                 try:
 
                     size = os.path.getsize('./' + filename)
                     print("Size: " + str(size))
-                    conn.send(str(size).encode())
+                    conn.send(str(size).encode()) # not dealing with byte conversion
                 
                 except:
                     conn.send('0'.encode())
