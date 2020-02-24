@@ -119,7 +119,7 @@ def Main():
             print("Waiting for someone to connect...")
             conn, client = s.accept()
 
-            print_lock.acquire()
+            #print_lock.acquire()
             print("connected to: ", client)
 
             start_new_thread(threaded,(conn,))

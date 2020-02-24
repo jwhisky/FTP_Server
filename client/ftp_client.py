@@ -85,7 +85,7 @@ while True:
         else:
             print("File does not exist.")
 
-    if (mes.startswith('send')):
+    if (mes.startswith('store')):
 
         tokens = mes.split(' ')
         
@@ -111,7 +111,8 @@ while True:
 
         print('Quitting!')
         s.send('quit'.encode())
-        #s.close()
+        s.shutdown(socket.SHUT_WR)
+        s.close()
         break
     
     if (mes == 'message'):
