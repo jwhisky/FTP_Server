@@ -6,25 +6,36 @@
 
 import socket
 import os
+import sys
 import selectors
+import json
 
 HOST = '127.0.0.1'  # The server's hostname or IP address
 PORT = 4321        # The port used by the server
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-connected = False
+
+
+print('\n\n------------- Commands -------------')
+print('CONNECT')
+print('LIST')
+print('RETRIEVE <FILENAME>')
+print('SEND <FILENAME>')
+print('QUIT')
+print('--------------------------------------\n\n')
+
 
 def connect(serverPort):
     try:
-        print(' Connecting...')
+        print(' Connecting...\n')
 
         serverAddress = (HOST, int(serverPort))
         s.connect(serverAddress)
 
-        print(' Connected!')
+        print(' Connected!\n')
 
     except:
-        print(' ERROR - Could NOT connect to server!')
+        print(' ERROR - Could NOT connect to server!\n')
         return False
 
     return True
@@ -42,25 +53,26 @@ while True:
         
         if (not connected):
             
-            print("Connect to server first!")
+            print("Connect to server first!\n")
             continue
 
         s.send(mes.encode())
-        print("Files:")
+        print("Files:\n")
         data = s.recv(1024)
+        print
         print(data.decode())
 
     if (mes.startswith('retrieve')):
 
         if (not connected):
             
-            print("Connect to server first!")
+            print("Connect to server first!\n")
             continue
 
         tokens = mes.split(' ')
         if (len(tokens) < 2):
 
-            print("Bad format. Proper usage: retrieve <filename>")
+            print("Bad format. Proper usage: retrieve <filename>\n")
             continue
         
         out = open(tokens[1], 'wb')
@@ -74,18 +86,18 @@ while True:
             s.send("download".encode())
             written = 0
             kilo = s.recv(1024)
-            print("Downloading " + tokens[1] + "...");
+            print("Downloading " + tokens[1] + "...\n");
             while True:
                 written += out.write(kilo)
                 if (written >= size):
                     break
                 kilo = s.recv(1024)
-            print("Finished.")
+            print("Finished.\n")
 
         else:
-            print("File does not exist.")
+            print("File does not exist.\n")
 
-    if (mes.startswith('store')):
+    if (mes.startswith('send')):
 
         tokens = mes.split(' ')
         
@@ -97,7 +109,7 @@ while True:
                 s.send(str(size).encode())
 
         except:
-            print("File does not exist to send.")
+            print("File does not exist to send.\n")
             continue
         
         confirm = s.recv(1024)
@@ -109,7 +121,7 @@ while True:
 
     if (mes == 'quit'):
 
-        print('Quitting!')
+        print('Quitting!\n')
         s.send('quit'.encode())
         s.shutdown(socket.SHUT_WR)
         s.close()
